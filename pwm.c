@@ -10,11 +10,12 @@ void timer_pwmconfig(void){
     TIMER_A0->CTL       |= TIMER_A_CTL_CLR;
     TIMER_A0->CTL       |= TIMER_A_CTL_SSEL__SMCLK;
     TIMER_A0->CTL       |= TIMER_A_CTL_ID__1;
-    TIMER_AO->CCR[0]    |= TICKS;
-    TIMER_A0->CCTL      |= TIMER_A_CCTLN_OUTMOD_4;
+    TIMER_A0->CCR[0]    |= TICKS;
+    TIMER_A0->CCTL[0]   |= TIMER_A_CCTLN_OUTMOD_4;
+    TIMER_A0->CTL |= TIMER_A_CTL_IE;
 
-    //TIMER_A0->CTL |= TIMER_A_CTL_IE;
 }
+
 
 void pwm_gpio_config(void){
     P2->DIR     |= BIT4;
@@ -33,8 +34,20 @@ void stop_pwm(void){
 }
 
 void button_config(void){
+    //P1->DIR &= ~(BIT1);
+    P1->DIR |= BIT1;
+    P1->IE |= BIT1;
+    __NVIC_EnableIRQ(PORT1_IRQn);
 
 }
 
-
+void PORT1_IRQHandler(void){
+    __disable_irq(); //disables interrupts
+    uint8_t status = P1->IFG; //Collects flags in P1
+    // if(status == BIT1){
+    TIMER_A0->R = 0; //if flag then reset timer
+    // }
+    P1->IFG = 0; //Lowers interrupt flag
+    __enable_irq(); // enables interrupts again
+}
 
